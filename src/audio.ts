@@ -271,4 +271,166 @@ export class AudioEngine {
   setInstruments(instruments: Instrument[]) {
     this._instruments = instruments
   }
+
+  async loadSample(id: string, audioDataUrl: string) {
+    if (this.samplers[id]) {
+      this.samplers[id].player?.dispose()
+      this.samplers[id].gain.dispose()
+      this.samplers[id].buffer.dispose()
+    }
+    const gain = new Tone.Gain(0.8).connect(this.masterGain)
+    const buffer = new Tone.ToneAudioBuffer()
+    await buffer.load(audioDataUrl)
+    this.samplers[id] = { buffer, gain }
+  }
+
+  setBpm(bpm: number) {
+    Tone.getTransport().bpm.value = bpm
+  }
+
+  getSamplerDurationSteps(id: string, bpm: number): number {
+    const buffer = this.samplers[id]?.buffer
+    if (!buffer || !buffer.loaded) return 1
+    const duration = buffer.duration
+    const stepDuration = 15 / bpm
+    return Math.max(1, Math.ceil(duration / stepDuration))
+  }
+
+  async start(grid: Grid, bpm: number) {
+    await Tone.start()
+    this._grid = grid
+    Tone.getTransport().bpm.value = bpm
+
+    if (this.sequence) {
+      this.sequence.stop(0)
+      this.sequence.dispose()
+    }
+
+    const totalSteps = grid[0]?.length || 64
+    const steps = Array.from({ length: totalSteps }, (_, i) => i)
+    this.sequence = new Tone.Sequence(
+      (time, step) => {
+        this.triggerStep(time, step as number)
+        Tone.getDraw().schedule(() => {
+          this.onStep?.(step as number)
+        }, time)
+      },
+      steps,
+      '16n'
+    )
+
+    this.sequence.start(0)
+    Tone.getTransport().start()
+  }
+
+  stop() {
+    Tone.getTransport().stop()
+    if (this.sequence) {
+      this.sequence.stop(0)
+    }
+  }
+
+  private triggerStep(time: number, step: number) {
+    const instrOrder = this._instruments.length > 0 
+      ? this._instruments.map(i => i.id) 
+      : DEFAULT_INSTRUMENTS.map(i => i.id)
+
+    instrOrder.forEach((id, row) => {
+      if (this._grid[row]?.[step]) {
+        this.triggerInstrument(id, step, time)
+      }
+    })
+  }
+
+  triggerInstrument(id: InstrumentId, step = 0, time?: number, synths?: ReturnType<typeof this.createSynths>) {
+    const t = time ?? Tone.now()
+
+    const samplerObj = this.samplers[id]
+    if (samplerObj && samplerObj.buffer.loaded) {
+      const inst = this._instruments.find(i => i.id === id)
+      const mode = inst?.playbackMode || 'oneshot'
+      const vol = inst?.volume ?? 0.8
+      
+      samplerObj.gain.gain.setValueAtTime(vol, t)
+
+      if (mode === 'oneshot') {
+        const player = new Tone.Player(samplerObj.buffer).connect(samplerObj.gain)
+        player.onstop = () => player.dispose()
+        player.start(t)
+      } else if (mode === 'choke') {
+        if (!samplerObj.player) {
+          samplerObj.player = new Tone.Player(samplerObj.buffer).connect(samplerObj.gain)
+        }
+        samplerObj.player.loop = false
+        samplerObj.player.stop(t)
+        samplerObj.player.start(t)
+      } else if (mode === 'loop') {
+        if (!samplerObj.player) {
+          samplerObj.player = new Tone.Player(samplerObj.buffer).connect(samplerObj.gain)
+        }
+        samplerObj.player.loop = true
+        samplerObj.player.stop(t)
+        samplerObj.player.start(t)
+      }
+      return
+    }
+
+    try {
+      switch (id) {
+        case 'kick':
+          (synths?.kick || this.kick).triggerAttackRelease('C1', '8n', t)
+          break
+        case 'snare':
+          (synths?.snare || this.snare).triggerAttackRelease('8n', t)
+          break
+        case 'clap':
+          (synths?.clap || this.clap).triggerAttackRelease('16n', t)
+          break
+        case 'hihat':
+          (synths?.hihat || this.hihat).triggerAttackRelease('16n', t)
+          break
+        case 'crash':
+          (synths?.crash || this.crash).triggerAttackRelease('1m', t)
+          break
+        case 'tomHigh':
+          (synths?.tomHigh || this.tomHigh).triggerAttackRelease('A2', '16n', t)
+          break
+        case 'tomLow':
+          (synths?.tomLow || this.tomLow).triggerAttackRelease('D2', '16n', t)
+          break
+        case 'bass':
+          (synths?.bass || this.bass).triggerAttackRelease(BASS_NOTES[step % BASS_NOTES.length], '8n', t)
+          break
+        case 'pluck':
+          (synths?.pluck || this.pluck).triggerAttack(PLUCK_NOTES[step % PLUCK_NOTES.length], t)
+          break
+        case 'lead':
+          (synths?.lead || this.lead).triggerAttackRelease(LEAD_NOTES[step % LEAD_NOTES.length], '16n', t)
+          break
+        case 'pad':
+          (synths?.pad || this.pad).triggerAttackRelease(PAD_NOTES[step % PAD_NOTES.length], '2n', t)
+          break
+        case 'piano':
+          (synths?.piano || this.piano).triggerAttackRelease(PIANO_NOTES[step % PIANO_NOTES.length], '8n', t)
+          break
+        case 'violin':
+          (synths?.violin || this.violin).triggerAttackRelease(VIOLIN_NOTES[step % VIOLIN_NOTES.length], '4n', t)
+          break
+      }
+    } catch (e) {
+    }
+  }
+
+  previewInstrument(id: InstrumentId) {
+    this.triggerInstrument(id, 0)
+  }
+
+  getProxyUrl(url: string) {
+    if (url.startsWith('http://localhost') || url.startsWith('blob:')) return url;
+    return `http://localhost:8000/proxy?url=${encodeURIComponent(url)}`;
+  }
+
+  getWaveform(): Float32Array {
+    return this.analyser.getValue() as Float32Array
+  }
 }
