@@ -29,3 +29,27 @@ export const PHONK_INSTRUMENTS: Instrument[] = [
   { id: 'phonk_10', label: 'Whistle', color: '#be2edd', colorHover: '#ca58e4', type: 'sampler', audioData: '/phonk/som-apito-do-juiz-mp3cut.mp3', volume: 0.8, playbackMode: 'oneshot' },
   ...DEFAULT_INSTRUMENTS.slice(10)
 ]
+
+export const STORAGE_KEY = 'minimusiclab_v2'
+
+const DEFAULT_BPM = 120
+const DEFAULT_STEPS = 16
+
+function makeEmptyGrid(instruments: Instrument[], steps: number): Grid {
+  return instruments.map(() => Array(steps).fill(false))
+}
+
+export function createDefaultState(): AppState {
+  return {
+    bpm: DEFAULT_BPM,
+    instruments: [...DEFAULT_INSTRUMENTS],
+    selectedInstrument: 'kick',
+    grid: makeEmptyGrid(DEFAULT_INSTRUMENTS, DEFAULT_STEPS),
+    playing: false,
+    currentStep: 0,
+    genre: 'house',
+    steps: DEFAULT_STEPS,
+    reverbEnabled: false,
+    pitchShift: 0
+  }
+}
