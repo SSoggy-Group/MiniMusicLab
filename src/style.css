@@ -409,3 +409,293 @@ button {
 .grid-cell.pop-in {
   animation: popIn 180ms cubic-bezier(.34,1.56,.64,1) forwards;
 }
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  font-size: 13px;
+  background: var(--cell-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--cell-border);
+  transition: all var(--transition);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.btn:hover {
+  background: var(--cell-hover-bg);
+  border-color: var(--cell-hover-border);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  transform: translateY(1px);
+  box-shadow: none;
+}
+
+.btn-primary {
+  background: linear-gradient(145deg, var(--accent), var(--accent-hover));
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(145deg, var(--accent-hover), var(--accent));
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+  color: #fff;
+}
+
+.btn-sm {
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
+.btn-danger {
+  color: #ff6b6b;
+  border-color: rgba(255,107,107,0.3);
+}
+
+.btn-danger:hover {
+  background: rgba(255,107,107,0.1);
+  border-color: #ff6b6b;
+  color: #ff6b6b;
+}
+
+/* Play/Stop button */
+.btn-play {
+  padding: 8px 18px;
+  background: var(--accent);
+  color: #fff;
+  border-color: transparent;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: 0 1px 4px rgba(74,110,160,.3);
+  min-width: 90px;
+  justify-content: center;
+}
+
+.btn-play:hover {
+  background: var(--accent-hover);
+  border-color: transparent;
+  box-shadow: 0 2px 8px rgba(74,110,160,.35);
+}
+
+.btn-play.playing {
+  background: #3a6a3a;
+  box-shadow: 0 1px 4px rgba(58,106,58,.3);
+}
+
+.btn-play.playing:hover {
+  background: #2e5a2e;
+}
+
+/* Show/hide play/stop icons */
+.btn-play .icon-stop { display: none; }
+.btn-play.playing .icon-play { display: none; }
+.btn-play.playing .icon-stop { display: inline-block; }
+
+.btn.saved {
+  background: #edf7ed;
+  border-color: #8dc88d;
+  color: #3a6a3a;
+}
+
+/* ── BPM Control ── */
+.bpm-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--cell-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-sm);
+  padding: 3px;
+}
+
+.genre-select {
+  background: var(--bg);
+  border: 1px solid var(--panel-border);
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  font-size: 13px;
+  font-weight: 500;
+  outline: none;
+  cursor: pointer;
+  transition: border-color var(--transition), color var(--transition);
+}
+
+.genre-select:hover {
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
+.bpm-btn {
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 14px;
+  font-weight: 600;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  line-height: 1;
+  transition: background var(--transition), color var(--transition);
+}
+
+.bpm-btn:hover {
+  background: var(--accent-light);
+  color: var(--accent);
+  box-shadow: none;
+  border-color: transparent;
+}
+
+.bpm-display {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  min-width: 58px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  transition: color var(--transition);
+}
+
+@keyframes bpmBump {
+  0% { transform: scale(1); color: var(--accent); }
+  40% { transform: scale(1.12); }
+  100% { transform: scale(1); color: var(--text-primary); }
+}
+
+.bpm-bump {
+  animation: bpmBump 0.3s ease forwards;
+}
+
+/* ─────────────────────────────────────────────────── BOTTOM PANEL ────────── */
+.bottom-panel {
+  flex: 0 0 var(--bottom-h);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 0 20px;
+  background: var(--panel);
+  border-top: 1px solid var(--panel-border);
+  box-shadow: 0 -1px 4px rgba(0,0,0,.04);
+}
+
+.status-text {
+  font-size: 12px;
+  color: var(--text-secondary);
+  flex: 0 0 auto;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 380px;
+}
+
+.status-text kbd {
+  display: inline-block;
+  background: var(--cell-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 11px;
+  font-family: inherit;
+  font-weight: 600;
+  color: var(--text-primary);
+  box-shadow: 0 1px 2px rgba(0,0,0,.08);
+  vertical-align: 1px;
+}
+
+.status-text strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* ── Visualizer ── */
+.visualizer-wrap {
+  flex: 1;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--cell-bg);
+  border: 1px solid var(--panel-border);
+}
+
+.visualizer-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.audio-clip {
+  grid-row: 1;
+  background: var(--clip-color, #8e44ad);
+  border-radius: var(--radius-sm);
+  opacity: 0.8;
+  z-index: 5;
+  pointer-events: none;
+  box-shadow: inset 0 2px 4px rgba(255,255,255,0.2);
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.vol-slider {
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.mode-select {
+  background: var(--cell-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--cell-border);
+  border-radius: 3px;
+  cursor: pointer;
+}
+.mode-select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.page-indicator {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.page-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  border-radius: var(--radius-sm);
+  padding: 4px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.page-btn:hover {
+  background: var(--surface-hover);
+  border-color: var(--border-hover);
+  transform: translateY(-1px);
+}
