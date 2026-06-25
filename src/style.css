@@ -1,0 +1,118 @@
+/* ─── MiniMusicLab Design System ──────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+/* ── Custom Properties ── */
+:root {
+  --font: 'Inter', system-ui, -apple-system, sans-serif;
+
+  /* Light Mode (Default) Surfaces */
+  --bg: #f4f5f7;
+  --panel: #ffffff;
+  --panel-border: #e1e3e6;
+  --panel-shadow: 0 4px 12px rgba(0,0,0,.05), 0 1px 3px rgba(0,0,0,.02);
+  --panel-shadow-lg: 0 10px 24px rgba(0,0,0,.06), 0 4px 8px rgba(0,0,0,.04);
+
+  /* Text */
+  --text-primary: #1a1b1e;
+  --text-secondary: #5c5f66;
+  --text-tertiary: #909296;
+
+  /* Accents */
+  --accent: #339af0;
+  --accent-light: #e7f5ff;
+  --accent-hover: #228be6;
+
+  /* Grid */
+  --cell-bg: #ffffff;
+  --cell-bg-beat: #f8f9fa;
+  --cell-border: #dee2e6;
+  --cell-hover-border: #adb5bd;
+  --cell-hover-bg: #f1f3f5;
+  --playhead-color: rgba(51, 154, 240, 0.15);
+
+  /* UI */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --transition: 120ms ease;
+  --topbar-h: 56px;
+  --sidebar-w: 140px;
+  --bottom-h: 68px;
+}
+
+:root.dark {
+  /* Dark Mode Surfaces */
+  --bg: #111111;
+  --panel: #1a1a1a;
+  --panel-border: #2c2c2c;
+  --panel-shadow: 0 4px 6px rgba(0,0,0,.5), 0 1px 3px rgba(0,0,0,.3);
+  --panel-shadow-lg: 0 10px 15px rgba(0,0,0,.5), 0 4px 6px rgba(0,0,0,.3);
+
+  /* Text */
+  --text-primary: #f0f0f0;
+  --text-secondary: #a0a0a0;
+  --text-tertiary: #6b6b6b;
+
+  /* Accents */
+  --accent: #ff6b6b;
+  --accent-light: #2c1a1a;
+  --accent-hover: #ff4757;
+
+  /* Grid */
+  --cell-bg: #222222;
+  --cell-bg-beat: #2a2a2a;
+  --cell-border: #333333;
+  --cell-hover-border: #555555;
+  --cell-hover-bg: #383838;
+  --playhead-color: rgba(255, 107, 107, 0.2);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    /* Dark Mode Surfaces */
+    --bg: #111111;
+    --panel: #1a1a1a;
+    --panel-border: #2c2c2c;
+    --panel-shadow: 0 4px 6px rgba(0,0,0,.5), 0 1px 3px rgba(0,0,0,.3);
+    --panel-shadow-lg: 0 10px 15px rgba(0,0,0,.5), 0 4px 6px rgba(0,0,0,.3);
+
+    /* Text */
+    --text-primary: #f0f0f0;
+    --text-secondary: #a0a0a0;
+    --text-tertiary: #6b6b6b;
+
+    /* Accents */
+    --accent: #ff6b6b;
+    --accent-light: #2c1a1a;
+    --accent-hover: #ff4757;
+
+    /* Grid */
+    --cell-bg: #222222;
+    --cell-bg-beat: #2a2a2a;
+    --cell-border: #333333;
+    --cell-hover-border: #555555;
+    --cell-hover-bg: #383838;
+    --playhead-color: rgba(255, 107, 107, 0.2);
+  }
+}
+
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text-primary);
+  font-size: 13px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  user-select: none;
+}
