@@ -433,4 +433,164 @@ export class AudioEngine {
   getWaveform(): Float32Array {
     return this.analyser.getValue() as Float32Array
   }
+
+  async exportWav(grid: Grid, bpm: number): Promise<Blob> {
+    const totalSteps = grid[0]?.length || 64
+    const totalDuration = ((totalSteps * (60 / bpm)) / 4) + 2 // Added 2 seconds for reverb/cymbal tails
+    
+    await Tone.loaded()
+
+    const buffer = await Tone.Offline(() => {
+      const offlineLimiter = new Tone.Limiter(-3).toDestination()
+      
+      const offlineReverb = new Tone.Reverb(2).connect(offlineLimiter)
+      offlineReverb.wet.value = this._reverbEnabled ? 0.5 : 0
+      
+      const offlinePitchShift = new Tone.PitchShift(this._pitchShift).connect(offlineReverb)
+      
+      const offlineMaster = new Tone.Gain(0.8).connect(offlinePitchShift)
+      const offlineSynths = this.createSynths(offlineMaster)
+      
+      const offlineSamplers: Record<string, { buffer: Tone.ToneAudioBuffer, gain: Tone.Gain, player?: Tone.Player }> = {}
+      Object.entries(this.samplers).forEach(([id, { buffer }]) => {
+        if (buffer && buffer.loaded) {
+          const gain = new Tone.Gain(0.8).connect(offlineMaster)
+          offlineSamplers[id] = { buffer, gain }
+        }
+      })
+
+      const stepDuration = (60 / bpm) / 4
+      const instrOrder = this._instruments.length > 0 
+        ? this._instruments.map(i => i.id) 
+        : DEFAULT_INSTRUMENTS.map(i => i.id)
+
+      for (let step = 0; step < totalSteps; step++) {
+        const time = step * stepDuration
+        instrOrder.forEach((id, row) => {
+          if (grid[row]?.[step]) {
+            const samplerObj = offlineSamplers[id]
+            if (samplerObj && samplerObj.buffer.loaded) {
+              const inst = this._instruments.find(i => i.id === id)
+              const mode = inst?.playbackMode || 'oneshot'
+              const vol = inst?.volume ?? 0.8
+              
+              samplerObj.gain.gain.setValueAtTime(vol, time)
+
+              if (mode === 'oneshot') {
+                const player = new Tone.Player(samplerObj.buffer.get() as any).connect(samplerObj.gain)
+                player.start(time)
+              } else if (mode === 'choke') {
+                if (!samplerObj.player) {
+                  samplerObj.player = new Tone.Player(samplerObj.buffer.get() as any).connect(samplerObj.gain)
+                }
+                samplerObj.player.loop = false
+                samplerObj.player.stop(time)
+                samplerObj.player.start(time)
+              } else if (mode === 'loop') {
+                if (!samplerObj.player) {
+                  samplerObj.player = new Tone.Player(samplerObj.buffer.get() as any).connect(samplerObj.gain)
+                }
+                samplerObj.player.loop = true
+                samplerObj.player.stop(time)
+                samplerObj.player.start(time)
+              }
+            } else {
+              this.triggerInstrument(id, step, time, offlineSynths)
+            }
+          }
+        })
+      }
+      
+    }, totalDuration)
+
+    return this.audioBufferToWav(buffer)
+  }
+
+  private audioBufferToWav(buffer: Tone.ToneAudioBuffer): Blob {
+    const numChannels = buffer.numberOfChannels;
+    const sampleRate = buffer.sampleRate;
+    const format = 1; // PCM
+    const bitDepth = 16;
+    
+    const result = new Float32Array(buffer.length * numChannels);
+    
+    if (numChannels === 2) {
+      const left = buffer.getChannelData(0);
+      const right = buffer.getChannelData(1);
+      for (let i = 0; i < buffer.length; i++) {
+        result[i * 2] = left[i];
+        result[i * 2 + 1] = right[i];
+      }
+    } else {
+      result.set(buffer.getChannelData(0));
+    }
+    
+    const dataLength = result.length * (bitDepth / 8);
+    const bufferLength = 44 + dataLength;
+    const arrayBuffer = new ArrayBuffer(bufferLength);
+    const view = new DataView(arrayBuffer);
+    
+    const writeString = (view: DataView, offset: number, string: string) => {
+      for (let i = 0; i < string.length; i++) {
+        view.setUint8(offset + i, string.charCodeAt(i));
+      }
+    };
+    
+    writeString(view, 0, 'RIFF');
+    view.setUint32(4, 36 + dataLength, true);
+    writeString(view, 8, 'WAVE');
+    writeString(view, 12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, format, true);
+    view.setUint16(22, numChannels, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * numChannels * (bitDepth / 8), true);
+    view.setUint16(32, numChannels * (bitDepth / 8), true);
+    view.setUint16(34, bitDepth, true);
+    writeString(view, 36, 'data');
+    view.setUint32(40, dataLength, true);
+    
+    let offset = 44;
+    for (let i = 0; i < result.length; i++) {
+      const sample = Math.max(-1, Math.min(1, result[i]));
+      view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+      offset += 2;
+    }
+    
+    return new Blob([view], { type: 'audio/wav' });
+  }
+}
+
+export class MicRecorder {
+  private mediaRecorder: MediaRecorder | null = null
+  private chunks: Blob[] = []
+
+  async startRecording() {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+    this.mediaRecorder = new MediaRecorder(stream)
+    this.chunks = []
+
+    this.mediaRecorder.ondataavailable = e => {
+      if (e.data.size > 0) this.chunks.push(e.data)
+    }
+
+    this.mediaRecorder.start()
+  }
+
+  async stopRecording(): Promise<string> {
+    return new Promise((resolve) => {
+      if (!this.mediaRecorder) return resolve('')
+      
+      this.mediaRecorder.onstop = () => {
+        const blob = new Blob(this.chunks, { type: 'audio/webm' })
+        const url = URL.createObjectURL(blob)
+        resolve(url)
+        
+        this.mediaRecorder?.stream.getTracks().forEach(t => t.stop())
+        this.mediaRecorder = null
+      }
+      
+      this.mediaRecorder.stop()
+    })
+  }
 }
