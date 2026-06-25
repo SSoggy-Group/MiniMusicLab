@@ -34,6 +34,39 @@ export class Visualizer {
 
   private loop() {
     this.rafId = requestAnimationFrame(() => this.loop())
-    // draw will be implemented in the next part
+    this.draw()
+  }
+
+  private draw() {
+    const { ctx, canvas } = this
+    const W = canvas.width / (window.devicePixelRatio || 1)
+    const H = canvas.height / (window.devicePixelRatio || 1)
+
+    ctx.clearRect(0, 0, W, H)
+
+    const data = this.engine.getWaveform()
+    const barCount = 48
+    const barW = W / barCount - 1
+    const midY = H / 2
+
+    ctx.fillStyle = '#4a6ea0'
+
+    for (let i = 0; i < barCount; i++) {
+      const sample = data[Math.floor((i / barCount) * data.length)]
+      const h = Math.max(2, Math.abs(sample) * H * 1.8)
+      const x = i * (W / barCount)
+      const y = midY - h / 2
+
+      ctx.globalAlpha = 0.4 + Math.abs(sample) * 0.6
+      ctx.beginPath()
+      ctx.roundRect(x, y, barW, h, 2)
+      ctx.fill()
+    }
+
+    ctx.globalAlpha = 1
+  }
+
+  destroy() {
+    cancelAnimationFrame(this.rafId)
   }
 }
