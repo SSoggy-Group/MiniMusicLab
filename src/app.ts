@@ -69,10 +69,6 @@ export class App {
     } else {
       this.showModePicker()
     }
-
-    if (false) {
-      this.dummyUnused()
-    }
   }
 
   private showModePicker() {
@@ -1109,18 +1105,51 @@ export class App {
     this.updateStatus()
   }
 
-  private doSave() {}
-  private doClear() {}
-  private doExport() {}
-  private syncGridToEngine() {}
+  private doSave() {
+    saveState(this.state)
+    this.saveBtn.classList.add('saved')
+    this.saveBtn.textContent = 'Saved!'
+    setTimeout(() => {
+      this.saveBtn.classList.remove('saved')
+      this.saveBtn.textContent = 'Save'
+    }, 1200)
+  }
 
-  private dummyUnused() {
-    console.log(
-      clearGrid,
-      this.doSave,
-      this.doClear,
-      this.doExport,
-      this.syncGridToEngine
-    )
+  private doClear() {
+    if (this.state.playing) {
+      this.state.playing = false
+      this.engine.stop()
+      this.updatePlayBtn()
+    }
+    const cleared = clearGrid(this.state)
+    this.state.grid = cleared.grid
+    this.renderGrid()
+    this.updateStatus()
+  }
+
+  private async doExport() {
+    this.exportBtn.classList.add('saved')
+    this.exportBtn.textContent = 'Exporting...'
+    try {
+      const blob = await this.engine.exportWav(this.state.grid, this.state.bpm)
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'MiniMusicLab_Beat.wav'
+      a.click()
+      URL.revokeObjectURL(url)
+      this.exportBtn.textContent = 'Exported!'
+    } catch (e) {
+      console.error('Export failed:', e)
+      this.exportBtn.textContent = 'Failed'
+    }
+    setTimeout(() => {
+      this.exportBtn.classList.remove('saved')
+      this.exportBtn.textContent = 'Export WAV'
+    }, 2000)
+  }
+
+  public syncGridToEngine() {
+    this.engine.setGrid(this.state.grid)
   }
 }
