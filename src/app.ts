@@ -1,7 +1,7 @@
 import { saveState, clearGrid, DEFAULT_INSTRUMENTS, PHONK_INSTRUMENTS } from './state'
 import { Visualizer } from './visualizer'
 import { AudioEngine, MicRecorder } from './audio'
-import type { AppState, HoveredTarget, InputMode } from './types'
+import type { AppState, HoveredTarget, Instrument, InputMode } from './types'
 import * as Tone from 'tone'
 
 const MODE_KEY = 'minimusiclab_inputmode'
@@ -909,8 +909,143 @@ export class App {
     )
   }
 
-  private setupInstantsListeners() {}
-  private renderInstantsResults(results: any[]) { return results }
+  private setupInstantsListeners() {
+    const modal = document.getElementById('instants-modal')!
+    const closeBtn = document.getElementById('close-instants-btn')!
+    const searchInput = document.getElementById('instants-search-input') as HTMLInputElement
+    const searchBtn = document.getElementById('instants-search-btn')!
+    const resultsContainer = document.getElementById('instants-results')!
+
+    const saveBtn = document.getElementById('save-btn')
+    saveBtn?.addEventListener('click', () => {
+      saveState(this.state)
+      const h = document.getElementById('save-btn')
+      if (h) {
+        const u = h.textContent
+        h.textContent = 'Saved!'
+        h.style.background = 'var(--success, #2ecc71)'
+        h.style.borderColor = 'var(--success, #2ecc71)'
+        h.style.color = '#fff'
+        setTimeout(() => {
+          h.textContent = u
+          h.style.background = ''
+          h.style.borderColor = ''
+          h.style.color = ''
+        }, 1500)
+      }
+    })
+
+    const themeBtn = document.getElementById('theme-btn')
+    themeBtn?.addEventListener('click', () => {
+      const doc = document.documentElement
+      if (
+        doc.classList.contains('dark') ||
+        (!doc.classList.contains('light') &&
+          window.matchMedia('(prefers-color-scheme: dark)').matches)
+      ) {
+        doc.classList.remove('dark')
+        doc.classList.add('light')
+        const btn = document.getElementById('theme-btn')
+        if (btn) btn.textContent = '☀️'
+      } else {
+        doc.classList.remove('light')
+        doc.classList.add('dark')
+        const btn = document.getElementById('theme-btn')
+        if (btn) btn.textContent = '🌙'
+      }
+    })
+
+    const addInstantsBtn = document.getElementById('add-instants-btn')
+    addInstantsBtn?.addEventListener('click', () => {
+      modal.style.display = 'flex'
+      searchInput.focus()
+    })
+
+    closeBtn.addEventListener('click', () => {
+      modal.style.display = 'none'
+    })
+
+    const performSearch = async () => {
+      const q = searchInput.value.trim()
+      if (q) {
+        resultsContainer.innerHTML = '<p class="soundboard-hint">Searching...</p>'
+        try {
+          const res = await fetch(`http://localhost:8000/search?q=${encodeURIComponent(q)}`)
+          const parsed = await res.json()
+          if (parsed.data && Array.isArray(parsed.data)) {
+            this.renderInstantsResults(parsed.data)
+          } else {
+            resultsContainer.innerHTML = '<p class="soundboard-hint">No results found.</p>'
+          }
+        } catch {
+          resultsContainer.innerHTML =
+            '<p class="soundboard-hint" style="color:red;">Error connecting to API. Is it running?</p>'
+        }
+      }
+    }
+
+    searchBtn.addEventListener('click', performSearch)
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        performSearch()
+      }
+    })
+  }
+
+  private renderInstantsResults(results: any[]) {
+    const container = document.getElementById('instants-results')
+    if (!container) return
+
+    container.innerHTML = ''
+    if (results.length === 0) {
+      container.innerHTML = '<p class="soundboard-hint">No results found.</p>'
+      return
+    }
+
+    results.forEach((item) => {
+      const card = document.createElement('div')
+      card.className = 'soundboard-result-card'
+
+      const title = document.createElement('div')
+      title.className = 'soundboard-result-title'
+      title.textContent = item.title
+
+      const actions = document.createElement('div')
+      actions.className = 'soundboard-result-actions'
+
+      const importBtn = document.createElement('button')
+      importBtn.className = 'btn btn-sm btn-primary'
+      importBtn.textContent = 'Import to Grid'
+      importBtn.onclick = async () => {
+        const url = this.engine.getProxyUrl(item.mp3)
+        const id = 'instants-' + Date.now().toString()
+        const newInst: Instrument = {
+          id,
+          label: item.title.substring(0, 15),
+          color: '#9b59b6',
+          colorHover: '#8e44ad',
+          type: 'sampler',
+          audioData: url,
+          volume: 0.8,
+          playbackMode: 'oneshot'
+        }
+
+        await this.engine.loadSample(id, url)
+        this.state.instruments.push(newInst)
+        this.state.grid.push(new Array(this.state.steps).fill(false))
+        saveState(this.state)
+        this.renderSidebar()
+        this.renderGrid()
+        document.getElementById('instants-modal')!.style.display = 'none'
+      }
+
+      actions.appendChild(importBtn)
+      card.appendChild(title)
+      card.appendChild(actions)
+      container.appendChild(card)
+    })
+  }
+
   private doUploadSound() {}
   private toggleRecording() {}
   private doSave() {}
@@ -923,8 +1058,6 @@ export class App {
       clearGrid,
       this.micRecorder,
       this.getRandomColor,
-      this.setupInstantsListeners,
-      this.renderInstantsResults,
       this.doUploadSound,
       this.toggleRecording,
       this.doSave,
