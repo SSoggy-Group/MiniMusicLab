@@ -355,11 +355,262 @@ export class App {
   }
 
   // Stubs to be implemented in subsequent commits
-  private renderSidebar() {}
-  private updateSidebarSelection() {}
-  private renderGrid() {}
-  private updateCell(row: number, col: number) { return [row, col] }
-  private updatePlayhead() {}
+  private renderSidebar() {
+    this.sidebar.innerHTML = ''
+    this.instrEls = []
+
+    const label = document.createElement('div')
+    label.className = 'sidebar-label'
+    label.textContent = 'Drum Kit'
+    this.sidebar.appendChild(label)
+
+    this.state.instruments.forEach((inst, idx) => {
+      const row = document.createElement('div')
+      row.className = 'instrument-row'
+      row.dataset.row = String(idx)
+      row.setAttribute('tabindex', '-1')
+
+      const dot = document.createElement('span')
+      dot.className = 'instr-dot'
+      dot.style.background = inst.color
+
+      const name = document.createElement('span')
+      name.className = 'instr-name'
+      name.textContent = inst.label
+
+      const leftWrap = document.createElement('div')
+      leftWrap.style.display = 'flex'
+      leftWrap.style.alignItems = 'center'
+      leftWrap.style.gap = '8px'
+      leftWrap.appendChild(dot)
+      leftWrap.appendChild(name)
+      row.appendChild(leftWrap)
+
+      if (inst.type === 'sampler') {
+        const controls = document.createElement('div')
+        controls.className = 'sampler-controls'
+        controls.style.display = 'flex'
+        controls.style.alignItems = 'center'
+        controls.style.gap = '6px'
+
+        const volInput = document.createElement('input')
+        volInput.type = 'range'
+        volInput.min = '0'
+        volInput.max = '4'
+        volInput.step = '0.05'
+        volInput.value = String(inst.volume ?? 0.8)
+        volInput.className = 'vol-slider'
+        volInput.style.width = '40px'
+        volInput.title = 'Volume'
+        volInput.oninput = (e) => {
+          const v = parseFloat((e.target as HTMLInputElement).value)
+          inst.volume = v
+          this.engine.setInstruments(this.state.instruments)
+        }
+        volInput.onchange = () => {
+          saveState(this.state)
+        }
+
+        const modeSelect = document.createElement('select')
+        modeSelect.className = 'mode-select btn btn-sm'
+        modeSelect.style.padding = '2px 4px'
+        modeSelect.style.fontSize = '10px'
+        ;['oneshot', 'choke', 'loop'].forEach((m) => {
+          const opt = document.createElement('option')
+          opt.value = m
+          opt.textContent = m === 'oneshot' ? '1-Shot' : m === 'choke' ? 'Cut' : 'Loop'
+          if ((inst.playbackMode || 'oneshot') === m) {
+            opt.selected = true
+          }
+          modeSelect.appendChild(opt)
+        })
+        modeSelect.onchange = (e) => {
+          const v = (e.target as HTMLSelectElement).value
+          inst.playbackMode = v as any
+          this.engine.setInstruments(this.state.instruments)
+          saveState(this.state)
+        }
+
+        const delBtn = document.createElement('button')
+        delBtn.className = 'btn btn-sm btn-danger'
+        delBtn.innerHTML = '×'
+        delBtn.title = 'Delete Sample'
+        delBtn.style.padding = '2px 6px'
+        delBtn.onclick = (e) => {
+          e.stopPropagation()
+          this.state.instruments.splice(idx, 1)
+          this.state.grid.splice(idx, 1)
+          saveState(this.state)
+          this.engine.setInstruments(this.state.instruments)
+          this.renderSidebar()
+          this.renderGrid()
+        }
+
+        controls.appendChild(volInput)
+        controls.appendChild(modeSelect)
+        controls.appendChild(delBtn)
+        row.appendChild(controls)
+      }
+
+      if (inst.id === this.state.selectedInstrument) {
+        row.classList.add('selected')
+      }
+
+      row.addEventListener('mouseenter', () => {
+        this.hovered = {
+          type: 'instrument',
+          row: idx,
+          instrumentId: inst.id
+        }
+        this.updateStatus()
+      })
+
+      row.addEventListener('mouseleave', () => {
+        this.hovered = { type: 'none' }
+        this.updateStatus()
+      })
+
+      row.addEventListener('click', (e) => {
+        if (!(e.target as HTMLElement).closest('.sampler-controls')) {
+          if (this.inputMode === 'click') {
+            this.hovered = {
+              type: 'instrument',
+              row: idx,
+              instrumentId: inst.id
+            }
+            this.handleKeyActivate()
+          }
+        }
+      })
+
+      this.sidebar.appendChild(row)
+      this.instrEls.push(row)
+    })
+  }
+
+  private updateSidebarSelection() {
+    this.instrEls.forEach((el, idx) => {
+      el.classList.toggle(
+        'selected',
+        this.state.instruments[idx].id === this.state.selectedInstrument
+      )
+    })
+  }
+
+  private renderGrid() {
+    const start = this.currentPage * this.PAGE_SIZE
+    const end = start + this.PAGE_SIZE
+
+    const indicator = document.getElementById('page-indicator')
+    if (indicator) {
+      indicator.textContent = `Page ${this.currentPage + 1} of ${Math.ceil(this.state.steps / this.PAGE_SIZE)}`
+    }
+
+    const numbers = document.getElementById('beat-numbers')!
+    numbers.innerHTML = ''
+    for (let c = start; c < end; c++) {
+      const num = document.createElement('span')
+      num.className = 'beat-num'
+      num.textContent = String(c + 1)
+      num.dataset.col = String(c)
+      numbers.appendChild(num)
+    }
+
+    this.gridEl.style.setProperty('--page-size', String(this.PAGE_SIZE))
+    numbers.style.setProperty('--page-size', String(this.PAGE_SIZE))
+
+    this.gridEl.innerHTML = ''
+    this.cellEls = []
+
+    this.state.instruments.forEach((inst, rIdx) => {
+      const row = document.createElement('div')
+      row.className = 'grid-row'
+      row.dataset.row = String(rIdx)
+      this.cellEls[rIdx] = []
+
+      for (let cIdx = start; cIdx < end; cIdx++) {
+        const cell = document.createElement('div')
+        cell.className = 'grid-cell'
+        cell.dataset.row = String(rIdx)
+        cell.dataset.col = String(cIdx)
+
+        if (cIdx % 4 === 0) {
+          cell.classList.add('beat-start')
+        }
+
+        if (this.state.grid[rIdx][cIdx]) {
+          cell.classList.add('filled')
+          cell.style.setProperty('--note-color', inst.color)
+          cell.style.setProperty('--note-color-hover', inst.colorHover)
+        }
+
+        cell.addEventListener('mouseenter', () => {
+          this.hovered = { type: 'cell', row: rIdx, col: cIdx }
+          this.updateStatus()
+        })
+
+        cell.addEventListener('mouseleave', () => {
+          this.hovered = { type: 'none' }
+          this.updateStatus()
+        })
+
+        cell.addEventListener('click', () => {
+          if (this.inputMode === 'click') {
+            this.hovered = { type: 'cell', row: rIdx, col: cIdx }
+            this.handleKeyActivate()
+          }
+        })
+
+        row.appendChild(cell)
+        this.cellEls[rIdx][cIdx] = cell
+      }
+      this.gridEl.appendChild(row)
+    })
+  }
+
+  private updateCell(row: number, col: number) {
+    const cell = this.cellEls[row]?.[col]
+    if (!cell) return
+
+    const inst = this.state.instruments[row]
+    const filled = this.state.grid[row][col]
+
+    cell.classList.toggle('filled', filled)
+    if (filled) {
+      cell.style.setProperty('--note-color', inst.color)
+      cell.style.setProperty('--note-color-hover', inst.colorHover)
+      cell.classList.add('pop-in')
+      cell.addEventListener(
+        'animationend',
+        () => cell.classList.remove('pop-in'),
+        { once: true }
+      )
+    } else {
+      cell.style.removeProperty('--note-color')
+      cell.style.removeProperty('--note-color-hover')
+    }
+  }
+
+  private updatePlayhead() {
+    const activePage = Math.floor(this.currentStep / this.PAGE_SIZE)
+    if (this.state.playing && activePage !== this.currentPage) {
+      this.currentPage = activePage
+      this.renderGrid()
+      this.updateStatus()
+    }
+
+    document.querySelectorAll('.grid-cell.active-step').forEach((el) => {
+      el.classList.remove('active-step')
+    })
+
+    this.state.instruments.forEach((_, rIdx) => {
+      const cell = this.cellEls[rIdx]?.[this.currentStep]
+      if (cell) {
+        cell.classList.add('active-step')
+      }
+    })
+  }
+
   private updatePlayBtn() {}
   private updateBpmDisplay() {}
   private updateFXDisplay() {}
@@ -385,16 +636,9 @@ export class App {
       this.keyHeld,
       this.previewTimeout,
       this.micRecorder,
-      this.currentPage,
-      this.PAGE_SIZE,
-      this.sidebar,
-      this.gridEl,
       this.statusText,
       this.bpmDisplay,
-      this.cellEls,
-      this.instrEls,
       this.pitchDisplay,
-      this.currentStep,
       this.getRandomColor,
       this.updateSidebarSelection,
       this.updateCell,
