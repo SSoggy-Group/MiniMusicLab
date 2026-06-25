@@ -611,15 +611,304 @@ export class App {
     })
   }
 
-  private updatePlayBtn() {}
-  private updateBpmDisplay() {}
-  private updateFXDisplay() {}
-  private updateStatus() {}
-  private bindEvents() {}
-  private handleKeyActivate() {}
-  private handleKeyHold() {}
-  private togglePlay() {}
-  private adjustBpm(amt: number) { return amt }
+  private updatePlayBtn() {
+    this.playBtn.classList.toggle('playing', this.state.playing)
+    const label = this.playBtn.querySelector('.btn-label')!
+    label.textContent = this.state.playing ? 'Stop' : 'Play'
+  }
+
+  private updateBpmDisplay() {
+    this.bpmDisplay.textContent = `${this.state.bpm} BPM`
+  }
+
+  private updateFXDisplay() {
+    this.reverbBtn.textContent = `Reverb: ${this.state.reverbEnabled ? 'ON' : 'OFF'}`
+    this.pitchDisplay.textContent = `Pitch: ${this.state.pitchShift}`
+  }
+
+  private updateStatus() {
+    const t = this.hovered
+    const actionText = this.inputMode === 'click' ? '<kbd>Click</kbd>' : this.inputMode === 'space' ? 'Press <kbd>Space</kbd>' : ''
+    let status = this.inputMode ? `Hover your mouse anywhere to interact (${actionText})` : 'Choose your input method above to begin'
+
+    switch (t.type) {
+      case 'cell': {
+        const name = this.state.instruments[t.row!].label
+        status = this.state.grid[t.row!][t.col!]
+          ? `${actionText} to remove this <strong>${name}</strong> note`
+          : `${actionText} to place a <strong>${name}</strong> note`
+        break
+      }
+      case 'instrument':
+        status = `${actionText} to select <strong>${this.state.instruments[t.row!].label}</strong>`
+        break
+      case 'play':
+        status = this.state.playing
+          ? `${actionText} to stop playback`
+          : `${actionText} to start playback`
+        break
+      case 'add-sound':
+        status = `${actionText} to upload a custom sample (.mp3, .wav)`
+        break
+      case 'add-mic':
+        status = `${actionText} to start microphone recording`
+        break
+      case 'stop-recording':
+        status = `${actionText} to STOP recording and add it as a track`
+        break
+      case 'page-prev':
+        status = `${actionText} to view previous page`
+        break
+      case 'page-next':
+        status = `${actionText} to view next page`
+        break
+      case 'page-add':
+        status = `${actionText} to add a new page (16 steps)`
+        break
+      case 'page-remove':
+        status = `${actionText} to remove the last page`
+        break
+      case 'genre':
+        status = `${actionText} to cycle through genre kits`
+        break
+      case 'reverb':
+        status = `${actionText} to toggle global Reverb`
+        break
+      case 'pitch-up':
+        status = `${actionText} to transpose global pitch up 1 semitone`
+        break
+      case 'pitch-down':
+        status = `${actionText} to transpose global pitch down 1 semitone`
+        break
+      case 'bpm-plus':
+        status = `${actionText} to increase BPM (+5)`
+        break
+      case 'bpm-minus':
+        status = `${actionText} to decrease BPM (−5)`
+        break
+      case 'save':
+        status = `${actionText} to save your pattern`
+        break
+      case 'export':
+        status = `${actionText} to export WAV`
+        break
+      case 'clear':
+        status = `${actionText} to clear the grid`
+        break
+    }
+    this.statusText.innerHTML = status
+  }
+
+  private bindEvents() {
+    const startAudio = async () => {
+      if (Tone.context.state !== 'running') {
+        await Tone.start()
+      }
+    }
+
+    document.addEventListener('click', startAudio, { capture: true })
+
+    document.addEventListener('keydown', (e) => {
+      startAudio()
+      if (
+        !(e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement) &&
+        this.inputMode === 'space' &&
+        e.code === 'Space'
+      ) {
+        e.preventDefault()
+        if (!this.keyHeld) {
+          this.keyHeld = true
+          if (this.hovered.type === 'none' && e.shiftKey) {
+            const genres: AppState['genre'][] = ['house', 'trap', 'synthwave', 'tuff phonk', 'lo-fi', 'techno']
+            const nextIdx = (genres.indexOf(this.state.genre) + 1) % genres.length
+            const g = genres[nextIdx]
+            this.state.genre = g
+            this.engine.setGenre(g)
+            const selectEl = document.getElementById('genre-select') as HTMLSelectElement
+            if (selectEl) {
+              selectEl.value = g
+            }
+            saveState(this.state)
+            return
+          }
+          if (this.hovered.type === 'none') {
+            this.togglePlay()
+            return
+          }
+          this.handleKeyActivate()
+          this.previewTimeout = setTimeout(() => {
+            this.handleKeyHold()
+          }, 200)
+        }
+      }
+    })
+
+    document.addEventListener('keyup', (e) => {
+      if (this.inputMode === 'space' && e.code === 'Space') {
+        e.preventDefault()
+        this.keyHeld = false
+        if (this.previewTimeout) {
+          clearTimeout(this.previewTimeout)
+          this.previewTimeout = null
+        }
+      }
+    })
+
+    this.setupInstantsListeners()
+  }
+
+  private handleKeyActivate() {
+    const t = this.hovered
+    switch (t.type) {
+      case 'cell': {
+        const { row: r, col: o } = t
+        if (r === undefined || o === undefined) return
+        const a = this.state.grid[r][o]
+        this.state.grid[r][o] = !a
+        this.updateCell(r, o)
+        if (!a) {
+          this.engine.previewInstrument(this.state.instruments[r].id)
+        }
+        break
+      }
+      case 'instrument': {
+        if (t.instrumentId === undefined) return
+        this.state.selectedInstrument = t.instrumentId
+        this.updateSidebarSelection()
+        this.engine.previewInstrument(t.instrumentId)
+        break
+      }
+      case 'play':
+        this.togglePlay()
+        break
+      case 'bpm-plus':
+        this.adjustBpm(5)
+        break
+      case 'bpm-minus':
+        this.adjustBpm(-5)
+        break
+      case 'save':
+        this.doSave()
+        break
+      case 'export':
+        this.doExport()
+        break
+      case 'clear':
+        this.doClear()
+        break
+      case 'add-sound':
+        this.doUploadSound()
+        break
+      case 'add-mic':
+      case 'stop-recording':
+        this.toggleRecording()
+        break
+      case 'page-prev':
+        if (this.currentPage > 0) {
+          this.currentPage--
+          this.renderGrid()
+        }
+        break
+      case 'page-next':
+        if (this.currentPage < Math.ceil(this.state.steps / this.PAGE_SIZE) - 1) {
+          this.currentPage++
+          this.renderGrid()
+        }
+        break
+      case 'page-add':
+        this.state.steps += this.PAGE_SIZE
+        this.state.grid.forEach((r) => {
+          for (let o = 0; o < this.PAGE_SIZE; o++) {
+            r.push(false)
+          }
+        })
+        this.currentPage = Math.ceil(this.state.steps / this.PAGE_SIZE) - 1
+        this.renderGrid()
+        break
+      case 'page-remove':
+        if (this.state.steps > this.PAGE_SIZE) {
+          this.state.steps -= this.PAGE_SIZE
+          this.state.grid.forEach((r) => {
+            r.length = this.state.steps
+          })
+          if (this.currentPage >= Math.ceil(this.state.steps / this.PAGE_SIZE)) {
+            this.currentPage = Math.ceil(this.state.steps / this.PAGE_SIZE) - 1
+          }
+          this.renderGrid()
+        }
+        break
+      case 'genre': {
+        const genres: AppState['genre'][] = ['house', 'trap', 'synthwave', 'tuff phonk', 'lo-fi', 'techno']
+        const nextIdx = (genres.indexOf(this.state.genre) + 1) % genres.length
+        const g = genres[nextIdx]
+        this.state.genre = g
+        this.engine.setGenre(g)
+        const selectEl = document.getElementById('genre-select') as HTMLSelectElement
+        if (selectEl) {
+          selectEl.value = g
+        }
+        saveState(this.state)
+        break
+      }
+      case 'reverb':
+        this.state.reverbEnabled = !this.state.reverbEnabled
+        this.engine.setReverb(this.state.reverbEnabled)
+        this.updateFXDisplay()
+        saveState(this.state)
+        break
+      case 'pitch-up':
+        this.state.pitchShift = Math.min(this.state.pitchShift + 1, 12)
+        this.engine.setPitchShift(this.state.pitchShift)
+        this.updateFXDisplay()
+        saveState(this.state)
+        break
+      case 'pitch-down':
+        this.state.pitchShift = Math.max(this.state.pitchShift - 1, -12)
+        this.engine.setPitchShift(this.state.pitchShift)
+        this.updateFXDisplay()
+        saveState(this.state)
+        break
+    }
+  }
+
+  private handleKeyHold() {
+    const t = this.hovered
+    if (t.type === 'cell' && t.row !== undefined) {
+      this.engine.previewInstrument(this.state.instruments[t.row].id)
+    } else if (t.type === 'instrument' && t.instrumentId) {
+      this.engine.previewInstrument(t.instrumentId)
+    }
+  }
+
+  private async togglePlay() {
+    if (this.state.playing) {
+      this.state.playing = false
+      this.engine.stop()
+      document.querySelectorAll('.grid-cell.active-step').forEach((t) => {
+        t.classList.remove('active-step')
+      })
+    } else {
+      this.state.playing = true
+      await this.engine.start(this.state.grid, this.state.bpm)
+    }
+    this.updatePlayBtn()
+    this.updateStatus()
+  }
+
+  private adjustBpm(t: number) {
+    this.state.bpm = Math.max(40, Math.min(240, this.state.bpm + t))
+    this.engine.setBpm(this.state.bpm)
+    this.updateBpmDisplay()
+    this.bpmDisplay.classList.add('bpm-bump')
+    this.bpmDisplay.addEventListener(
+      'animationend',
+      () => {
+        this.bpmDisplay.classList.remove('bpm-bump')
+      },
+      { once: true }
+    )
+  }
+
   private setupInstantsListeners() {}
   private renderInstantsResults(results: any[]) { return results }
   private doUploadSound() {}
@@ -632,19 +921,8 @@ export class App {
   private dummyUnused() {
     console.log(
       clearGrid,
-      this.hovered,
-      this.keyHeld,
-      this.previewTimeout,
       this.micRecorder,
-      this.statusText,
-      this.bpmDisplay,
-      this.pitchDisplay,
       this.getRandomColor,
-      this.updateSidebarSelection,
-      this.updateCell,
-      this.handleKeyHold,
-      this.togglePlay,
-      this.adjustBpm,
       this.setupInstantsListeners,
       this.renderInstantsResults,
       this.doUploadSound,
