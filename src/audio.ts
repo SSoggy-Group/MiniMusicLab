@@ -195,4 +195,80 @@ export class AudioEngine {
   get analyserNode(): Tone.Analyser {
     return this.analyser
   }
+
+  setGenre(genre: 'house' | 'trap' | 'synthwave' | 'tuff phonk' | 'lo-fi' | 'techno') {
+    if (genre === 'house') {
+      BASS_NOTES = ['C2', 'C2', 'C2', 'G2', 'C2', 'C2', 'G2', 'C2', 'C2', 'C2', 'F2', 'G2', 'A2', 'G2', 'F2', 'E2']
+      PLUCK_NOTES = ['C4', 'D4', 'E4', 'G4', 'A4', 'C5', 'D5', 'E5', 'G5', 'A5', 'C5', 'B4', 'A4', 'G4', 'E4', 'D4']
+      LEAD_NOTES = ['C5', 'Eb5', 'F5', 'G5', 'C6', 'Bb5', 'G5', 'F5', 'Eb5', 'C5', 'Bb4', 'C5', 'Eb5', 'F5', 'G5', 'C6']
+      PAD_NOTES = ['C4', 'C4', 'Eb4', 'Eb4', 'F4', 'F4', 'G4', 'G4', 'C4', 'C4', 'Eb4', 'Eb4', 'F4', 'F4', 'G4', 'G4']
+      this.kick.set({ pitchDecay: 0.05, envelope: { decay: 0.4 } })
+      this.clap.set({ noise: { type: 'pink' } })
+      this.hihat.set({ envelope: { decay: 0.1 }, resonance: 4000 })
+      this.bass.set({ oscillator: { type: 'square' }, envelope: { decay: 0.2 } })
+    } else if (genre === 'trap') {
+      BASS_NOTES = ['C1', 'C1', 'C1', 'C1', 'Eb1', 'Eb1', 'D1', 'D1', 'C1', 'C1', 'G1', 'G1', 'F1', 'F1', 'C1', 'C1']
+      PLUCK_NOTES = ['C5', 'G4', 'Eb5', 'C5', 'G4', 'C5', 'D5', 'G4', 'C5', 'G4', 'F5', 'Eb5', 'D5', 'C5', 'G4', 'G4']
+      LEAD_NOTES = ['C6', 'G5', 'C6', 'Eb6', 'D6', 'C6', 'G5', 'C6', 'Eb6', 'F6', 'G6', 'F6', 'Eb6', 'D6', 'C6', 'G5']
+      PAD_NOTES = ['C4', 'C4', 'C4', 'C4', 'Ab3', 'Ab3', 'G3', 'G3', 'C4', 'C4', 'Eb4', 'Eb4', 'D4', 'D4', 'C4', 'C4']
+      this.kick.set({ pitchDecay: 0.3, envelope: { decay: 1.2 } }) 
+      this.clap.set({ noise: { type: 'white' } }) 
+      this.hihat.set({ envelope: { decay: 0.05 }, resonance: 8000 })
+      this.bass.set({ oscillator: { type: 'triangle' }, envelope: { decay: 1.0, release: 1.0 } })
+    } else if (genre === 'synthwave') {
+      BASS_NOTES = ['F1', 'F1', 'F1', 'F1', 'G1', 'G1', 'G1', 'G1', 'A1', 'A1', 'A1', 'A1', 'C2', 'C2', 'C2', 'C2']
+      PLUCK_NOTES = ['F4', 'A4', 'C5', 'F5', 'G4', 'B4', 'D5', 'G5', 'A4', 'C5', 'E5', 'A5', 'C5', 'E5', 'G5', 'C6']
+      LEAD_NOTES = ['A5', 'G5', 'A5', 'C6', 'B5', 'G5', 'A5', 'E5', 'A5', 'G5', 'A5', 'C6', 'D6', 'C6', 'B5', 'G5']
+      PAD_NOTES = ['F4', 'F4', 'F4', 'F4', 'G4', 'G4', 'G4', 'G4', 'A4', 'A4', 'A4', 'A4', 'C5', 'C5', 'C5', 'C5']
+      this.kick.set({ pitchDecay: 0.01, envelope: { decay: 0.2 } })
+      this.clap.set({ noise: { type: 'brown' } })
+      this.hihat.set({ envelope: { decay: 0.3 }, resonance: 2000 })
+      this.bass.set({ oscillator: { type: 'sawtooth' }, envelope: { decay: 0.4 } })
+    } else if (genre === 'tuff phonk') {
+      BASS_NOTES = ['C1', 'C1', 'Eb1', 'C1', 'F1', 'F1', 'G1', 'Eb1', 'C1', 'C1', 'Eb1', 'C1', 'Bb0', 'C1', 'G1', 'Eb1']
+      PLUCK_NOTES = ['C5', 'Eb5', 'G5', 'C6', 'Eb6', 'G6', 'C7', 'Eb7', 'C5', 'Eb5', 'G5', 'C6', 'Eb6', 'G6', 'C7', 'Eb7']
+      LEAD_NOTES = ['C6', 'C6', 'Eb6', 'C6', 'G6', 'F6', 'Eb6', 'C6', 'Bb5', 'C6', 'Eb6', 'C6', 'G6', 'F6', 'Eb6', 'C6']
+      PAD_NOTES = ['C3', 'C3', 'Eb3', 'Eb3', 'F3', 'F3', 'G3', 'G3', 'C3', 'C3', 'Eb3', 'Eb3', 'F3', 'F3', 'G3', 'G3']
+      this.kick.set({ pitchDecay: 0.2, envelope: { decay: 0.6 } })
+      this.clap.set({ noise: { type: 'white' } })
+      this.hihat.set({ envelope: { decay: 0.03 }, resonance: 6000 })
+      this.bass.set({ oscillator: { type: 'square' }, envelope: { decay: 1.2, release: 1.5 } })
+    } else if (genre === 'lo-fi') {
+      BASS_NOTES = ['C2', 'C2', 'E2', 'E2', 'A1', 'A1', 'F1', 'F1', 'C2', 'C2', 'E2', 'E2', 'A1', 'A1', 'G1', 'G1']
+      PLUCK_NOTES = ['E4', 'G4', 'B4', 'D5', 'C5', 'E5', 'G5', 'B5', 'A4', 'C5', 'E5', 'G5', 'F4', 'A4', 'C5', 'E5']
+      LEAD_NOTES = ['G5', 'E5', 'D5', 'C5', 'A4', 'C5', 'D5', 'E5', 'G5', 'A5', 'G5', 'E5', 'D5', 'C5', 'A4', 'G4']
+      PAD_NOTES = ['C4', 'C4', 'E4', 'E4', 'A3', 'A3', 'F3', 'F3', 'C4', 'C4', 'E4', 'E4', 'A3', 'A3', 'G3', 'G3']
+      this.kick.set({ pitchDecay: 0.01, envelope: { decay: 0.15 } })
+      this.clap.set({ noise: { type: 'brown' } })
+      this.hihat.set({ envelope: { decay: 0.08 }, resonance: 2000 })
+      this.bass.set({ oscillator: { type: 'triangle' }, envelope: { decay: 0.8, release: 1.2 } })
+    } else if (genre === 'techno') {
+      BASS_NOTES = ['C1', 'C1', 'C1', 'Db1', 'C1', 'C1', 'C1', 'Bb0', 'C1', 'C1', 'C1', 'Db1', 'C1', 'C1', 'F1', 'Eb1']
+      PLUCK_NOTES = ['C4', 'C4', 'C4', 'Eb4', 'C4', 'C4', 'C4', 'F4', 'C4', 'C4', 'C4', 'Eb4', 'C4', 'C4', 'G4', 'F4']
+      LEAD_NOTES = ['C5', 'C5', 'Db5', 'C5', 'C5', 'C5', 'Bb4', 'C5', 'C5', 'C5', 'Db5', 'C5', 'C5', 'C5', 'Eb5', 'F5']
+      PAD_NOTES = ['C3', 'C3', 'C3', 'C3', 'C3', 'C3', 'C3', 'C3', 'C3', 'C3', 'C3', 'C3', 'C3', 'C3', 'C3', 'C3']
+      this.kick.set({ pitchDecay: 0.08, envelope: { decay: 0.5 } })
+      this.clap.set({ noise: { type: 'white' } })
+      this.hihat.set({ envelope: { decay: 0.02 }, resonance: 8000 })
+      this.bass.set({ oscillator: { type: 'sawtooth' }, envelope: { decay: 0.3, release: 0.2 } })
+    }
+  }
+
+  setReverb(enabled: boolean) {
+    this._reverbEnabled = enabled
+    this.globalReverb.wet.value = enabled ? 0.5 : 0
+  }
+
+  setPitchShift(semitones: number) {
+    this._pitchShift = semitones
+    this.globalPitchShift.pitch = semitones
+  }
+
+  setGrid(grid: Grid) {
+    this._grid = grid
+  }
+
+  setInstruments(instruments: Instrument[]) {
+    this._instruments = instruments
+  }
 }
