@@ -1046,8 +1046,69 @@ export class App {
     })
   }
 
-  private doUploadSound() {}
-  private toggleRecording() {}
+  private doUploadSound() {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = 'audio/*'
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0]
+      if (!file) return
+      const id = 'custom_' + Date.now()
+      const url = URL.createObjectURL(file)
+      await this.engine.loadSample(id, url)
+      const { color, colorHover } = this.getRandomColor()
+      this.state.instruments.push({
+        id,
+        label: file.name.substring(0, 12),
+        color,
+        colorHover,
+        type: 'sampler',
+        audioData: url,
+        volume: 0.8,
+        playbackMode: 'oneshot'
+      })
+      this.state.grid.push(new Array(this.state.steps).fill(false))
+      this.engine.setInstruments(this.state.instruments)
+      this.renderSidebar()
+      this.renderGrid()
+    }
+    input.click()
+  }
+
+  private async toggleRecording() {
+    if (this.isRecording) {
+      this.isRecording = false
+      const url = await this.micRecorder.stopRecording()
+      if (url) {
+        const id = 'mic_' + Date.now()
+        await this.engine.loadSample(id, url)
+        const { color, colorHover } = this.getRandomColor()
+        this.state.instruments.push({
+          id,
+          label: 'Mic ' + this.state.instruments.length,
+          color,
+          colorHover,
+          type: 'sampler',
+          audioData: url,
+          volume: 0.8,
+          playbackMode: 'oneshot'
+        })
+        this.state.grid.push(new Array(this.state.steps).fill(false))
+        this.engine.setInstruments(this.state.instruments)
+        this.renderSidebar()
+        this.renderGrid()
+      }
+      const btn = document.getElementById('add-mic-btn')
+      if (btn) btn.textContent = '+ Mic'
+    } else {
+      this.isRecording = true
+      await this.micRecorder.startRecording()
+      const btn = document.getElementById('add-mic-btn')
+      if (btn) btn.textContent = 'Recording... (Stop)'
+    }
+    this.updateStatus()
+  }
+
   private doSave() {}
   private doClear() {}
   private doExport() {}
@@ -1056,10 +1117,6 @@ export class App {
   private dummyUnused() {
     console.log(
       clearGrid,
-      this.micRecorder,
-      this.getRandomColor,
-      this.doUploadSound,
-      this.toggleRecording,
       this.doSave,
       this.doClear,
       this.doExport,
