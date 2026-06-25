@@ -116,3 +116,171 @@ button {
   outline: none;
   user-select: none;
 }
+
+/* ── App Root ── */
+.app-root {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  min-height: 0;
+}
+
+/* ─────────────────────────────────────────────────── TOP BAR ─────────────── */
+.top-bar {
+  flex: 0 0 var(--topbar-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--panel-border);
+  box-shadow: var(--panel-shadow);
+  z-index: 10;
+}
+
+.top-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 160px;
+}
+
+.app-logo {
+  display: flex;
+  align-items: center;
+  color: var(--accent);
+  flex-shrink: 0;
+  margin-top: -1px; /* Optical center tweak */
+}
+
+.app-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
+  line-height: 1;
+}
+
+.top-bar-center {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.top-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 160px;
+  justify-content: flex-end;
+}
+
+/* ─────────────────────────────────────────────────── MAIN AREA ───────────── */
+.main-area {
+  flex: 1 1 0;
+  display: flex;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* ─────────────────────────────────────────────────── SIDEBAR ─────────────── */
+.sidebar {
+  flex: 0 0 var(--sidebar-w);
+  background: var(--panel);
+  border-right: 1px solid var(--panel-border);
+  display: flex;
+  flex-direction: column;
+  padding-top: 4px;
+  padding-bottom: 12px;
+}
+
+.sidebar-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-tertiary);
+  padding: 12px 16px 8px;
+  height: 36px;
+  box-sizing: border-box;
+}
+
+.instrument-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 16px;
+  cursor: pointer;
+  border-radius: 0;
+  transition: background var(--transition);
+  position: relative;
+  user-select: none;
+  flex: 1;
+  min-height: 42px;
+}
+
+.instrument-row::before {
+  content: '';
+  position: absolute;
+  inset: 2px 6px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  transition: background var(--transition);
+  z-index: 0;
+}
+
+.instrument-row:hover::before {
+  background: rgba(255,255,255,0.05);
+}
+
+.instrument-row.selected::before {
+  background: rgba(255,255,255,0.08);
+}
+
+.sampler-controls {
+  z-index: 1; /* above row hover state */
+}
+
+.instr-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 1px 3px rgba(0,0,0,.2);
+}
+
+.instr-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  position: relative;
+  z-index: 1;
+  transition: color var(--transition);
+}
+
+.instrument-row.selected .instr-name {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* Selection indicator bar on the left */
+.instrument-row.selected::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 3px;
+  background: var(--accent);
+  border-radius: 0 2px 2px 0;
+}
+
+/* Align instrument rows with grid rows */
+.instrument-row {
+  /* Let flex: 1 handle the stretching, just ensure margin/gap matches grid */
+  margin-bottom: 3px;
+}
