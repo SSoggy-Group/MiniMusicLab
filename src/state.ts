@@ -53,3 +53,57 @@ export function createDefaultState(): AppState {
     pitchShift: 0
   }
 }
+
+export function loadState(): AppState {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (!raw) return createDefaultState()
+    const parsed = JSON.parse(raw) as Partial<AppState>
+    const defaults = createDefaultState()
+    return {
+      bpm: typeof parsed.bpm === 'number' ? parsed.bpm : defaults.bpm,
+      instruments: [...DEFAULT_INSTRUMENTS],
+      selectedInstrument: isValidInstrument(parsed.selectedInstrument)
+        ? parsed.selectedInstrument
+        : defaults.selectedInstrument,
+      grid: isValidGrid(parsed.grid) ? parsed.grid : defaults.grid,
+      playing: false,
+      currentStep: 0,
+      genre: ['house', 'trap', 'synthwave'].includes(parsed.genre as any) ? parsed.genre! : defaults.genre,
+      steps: typeof parsed.steps === 'number' ? parsed.steps : (isValidGrid(parsed.grid) ? parsed.grid![0].length : defaults.steps),
+      reverbEnabled: typeof parsed.reverbEnabled === 'boolean' ? parsed.reverbEnabled : defaults.reverbEnabled,
+      pitchShift: typeof parsed.pitchShift === 'number' ? parsed.pitchShift : defaults.pitchShift
+    }
+  } catch (e) {
+    return createDefaultState()
+  }
+}
+
+export function saveState(state: AppState): void {
+  try {
+    const toSave: Partial<AppState> = {
+      bpm: state.bpm,
+      selectedInstrument: DEFAULT_INSTRUMENTS.some(i => i.id === state.selectedInstrument) ? state.selectedInstrument : 'kick',
+      genre: state.genre,
+      grid: state.grid.slice(0, DEFAULT_INSTRUMENTS.length),
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave))
+  } catch {
+  }
+}
+
+function isValidInstrument(v: unknown): v is InstrumentId {
+  return typeof v === 'string'
+}
+
+function isValidGrid(v: unknown): v is Grid {
+  if (!Array.isArray(v)) return false
+  if (v.length !== DEFAULT_INSTRUMENTS.length) return false
+  return v.every(
+    row => Array.isArray(row) && row.length > 0 && row.every(c => typeof c === 'boolean')
+  )
+}
+
+export function clearGrid(state: AppState): AppState {
+  return { ...state, grid: makeEmptyGrid(state.instruments, state.steps) }
+}
