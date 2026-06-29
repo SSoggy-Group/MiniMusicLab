@@ -1,9 +1,8 @@
-// ─── Audio Engine (Tone.js) ───────────────────────────────────────────────────
 import * as Tone from 'tone'
 import { DEFAULT_INSTRUMENTS } from './state'
 import type { InstrumentId, Grid, Instrument } from './types'
 
-// Notes used for pitched instruments (mutable for genres)
+// per-genre note sequences, swapped out by setGenre()
 let BASS_NOTES = ['C2', 'C2', 'C2', 'G2', 'C2', 'C2', 'G2', 'C2',
                   'C2', 'C2', 'F2', 'G2', 'A2', 'G2', 'F2', 'E2']
 let PLUCK_NOTES = ['C4', 'D4', 'E4', 'G4', 'A4', 'C5', 'D5', 'E5',
@@ -16,8 +15,6 @@ let PIANO_NOTES = [['C4', 'Eb4', 'G4'], ['C4', 'Eb4', 'G4'], ['F4', 'Ab4', 'C5']
                    ['C4', 'Eb4', 'G4'], ['C4', 'Eb4', 'G4'], ['F4', 'Ab4', 'C5'], ['G4', 'B4', 'D5'],
                    ['Ab4', 'C5', 'Eb5'], ['Ab4', 'C5', 'Eb5'], ['Bb4', 'D5', 'F5'], ['Bb4', 'D5', 'F5'],
                    ['C5', 'Eb5', 'G5'], ['G4', 'B4', 'D5'], ['C4', 'Eb4', 'G4'], ['C4', 'Eb4', 'G4']]
-let VIOLIN_NOTES = ['C5', 'C5', 'Eb5', 'Eb5', 'F5', 'F5', 'G5', 'G5',
-                    'C5', 'C5', 'Eb5', 'Eb5', 'F5', 'F5', 'G5', 'G5']
 
 export class AudioEngine {
   private kick: Tone.MembraneSynth
@@ -32,7 +29,6 @@ export class AudioEngine {
   private lead: Tone.FMSynth
   private pad: Tone.PolySynth
   private piano: Tone.Sampler
-  private violin: Tone.PolySynth
   private globalReverb: Tone.Reverb
   private globalPitchShift: Tone.PitchShift
   private _reverbEnabled = false
@@ -46,7 +42,6 @@ export class AudioEngine {
   onStep: ((step: number) => void) | null = null
 
   constructor() {
-    // Master limiter to avoid clipping
     const limiter = new Tone.Limiter(-3).toDestination()
 
     this.analyser = new Tone.Analyser('waveform', 256)
@@ -72,7 +67,6 @@ export class AudioEngine {
     this.lead = synths.lead
     this.pad = synths.pad
     this.piano = synths.piano
-    this.violin = synths.violin
   }
 
   private createSynths(destination: Tone.ToneAudioNode) {
@@ -103,13 +97,14 @@ export class AudioEngine {
     clap.volume.value = 2
 
     const crash = new Tone.MetalSynth({
-      envelope: { attack: 0.001, decay: 1.0, release: 0.2 },
+      frequency: 250,
+      envelope: { attack: 0.001, decay: 2.5, release: 0.5 },
       harmonicity: 5.1,
-      modulationIndex: 32,
-      resonance: 4000,
+      modulationIndex: 64,
+      resonance: 6000,
       octaves: 1.5,
     }).connect(destination)
-    crash.volume.value = -8
+    crash.volume.value = 0
 
     const tomHigh = new Tone.MembraneSynth({
       pitchDecay: 0.05,
@@ -177,18 +172,7 @@ export class AudioEngine {
     }).connect(destination)
     piano.volume.value = 4
 
-    const stringChorus = new Tone.Chorus(2, 4, 0.5).connect(destination).start()
-    const stringFilter = new Tone.Filter(3000, "lowpass").connect(stringChorus)
-    const violin = new Tone.Sampler({
-      urls: {
-        "C5": "ElevenLabs_Warm_nostalgic_violin,_memories_of_family_gathering.mp3"
-      },
-      release: 1,
-      baseUrl: "/"
-    }).connect(stringFilter)
-    violin.volume.value = 4
-
-    return { kick, snare, hihat, clap, crash, tomHigh, tomLow, bass, pluck, lead, pad, piano, violin }
+    return { kick, snare, hihat, clap, crash, tomHigh, tomLow, bass, pluck, lead, pad, piano }
   }
 
   get analyserNode(): Tone.Analyser {
@@ -418,9 +402,6 @@ export class AudioEngine {
           break
         case 'piano':
           (synths?.piano || this.piano).triggerAttackRelease(PIANO_NOTES[step % PIANO_NOTES.length], '8n', t)
-          break
-        case 'violin':
-          (synths?.violin || this.violin).triggerAttackRelease(VIOLIN_NOTES[step % VIOLIN_NOTES.length], '4n', t)
           break
       }
     } catch (e) {

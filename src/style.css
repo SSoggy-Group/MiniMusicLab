@@ -1,4 +1,4 @@
-/* ─── MiniMusicLab Design System ──────────────────────────────────────────── */
+/* design system tokens */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
 
 /* ── Custom Properties ── */
@@ -125,7 +125,7 @@ button {
   min-height: 0;
 }
 
-/* ─────────────────────────────────────────────────── TOP BAR ─────────────── */
+/* top bar */
 .top-bar {
   flex: 0 0 var(--topbar-h);
   display: flex;
@@ -175,7 +175,7 @@ button {
   justify-content: flex-end;
 }
 
-/* ─────────────────────────────────────────────────── MAIN AREA ───────────── */
+/* main area */
 .main-area {
   flex: 1 1 0;
   display: flex;
@@ -184,7 +184,7 @@ button {
   overflow-x: hidden;
 }
 
-/* ─────────────────────────────────────────────────── SIDEBAR ─────────────── */
+/* sidebar */
 .sidebar {
   flex: 0 0 var(--sidebar-w);
   background: var(--panel);
@@ -192,7 +192,7 @@ button {
   display: flex;
   flex-direction: column;
   padding-top: 4px;
-  padding-bottom: 12px;
+  padding-bottom: 20px; /* Matched with grid-wrapper to ensure equal stretch space */
 }
 
 .sidebar-label {
@@ -217,9 +217,9 @@ button {
   transition: background var(--transition);
   position: relative;
   user-select: none;
-  flex: 1;
   height: 42px;
   min-height: 42px;
+  flex: 1; /* allow stretching */
 }
 
 .instrument-row::before {
@@ -289,7 +289,7 @@ button {
   margin-bottom: 3px;
 }
 
-/* ─── GRID ────────────────────────────────────────────────────────────────── */
+/* grid */
 .grid-wrapper {
   position: relative;
   flex: 1 1 0;
@@ -297,7 +297,6 @@ button {
   flex-direction: column;
   overflow: visible;
   padding: 20px 24px 20px 20px;
-  gap: 4px;
   min-height: 0;
 }
 
@@ -337,9 +336,9 @@ button {
   display: grid;
   grid-template-columns: repeat(var(--page-size, 16), 1fr);
   gap: 3px;
-  flex: 1;
   height: 42px;
   min-height: 42px;
+  flex: 1; /* allow stretching */
 }
 
 .grid-cell {
@@ -581,7 +580,7 @@ button {
   animation: bpmBump 0.3s ease forwards;
 }
 
-/* ─────────────────────────────────────────────────── BOTTOM PANEL ────────── */
+/* bottom panel */
 .bottom-panel {
   flex: 0 0 var(--bottom-h);
   display: flex;

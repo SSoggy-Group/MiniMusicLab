@@ -1,62 +1,68 @@
 # MiniMusicLab
 
-A polished, one-key 16-step beat sequencer in the browser.
+A browser-based 16-step beat sequencer. No login, no install — just open it and make beats.
 
-## Requirements
+Live at [ssoggy-group.github.io/MiniMusicLab](https://ssoggy-group.github.io/MiniMusicLab)
 
-- [pnpm](https://pnpm.io/) (v8+)
-- Node.js 18+
+---
 
-## Getting Started
+## Running locally
+
+You need [pnpm](https://pnpm.io/) and Node 18+.
 
 ```bash
-# Install dependencies
 pnpm install
-
-# Start development server
 pnpm dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173) in your browser.
+Open [http://localhost:5173](http://localhost:5173).
 
-## Build
+## Deploy to GitHub Pages
 
 ```bash
 pnpm build
-pnpm preview
+pnpm deploy
 ```
 
-## How to Use
+This pushes the `dist/` folder to the `gh-pages` branch. Make sure GitHub Pages is set to serve from `gh-pages` in your repo settings.
 
-**All app interactions use a single key: `Space` (or `0` as alternative).**
+---
 
-| Action | How |
+## How it works
+
+Click on cells in the grid to toggle notes on/off. Hit **Play** to hear it loop.
+
+You can also switch to **Spacebar mode** from the dropdown — then hovering a cell and pressing space places or removes a note instead of clicking. Good for playing things more "live".
+
+| Thing | How to do it |
 |---|---|
-| Place a note | Hover over an empty cell, press `Space` |
-| Remove a note | Hover over a filled note, press `Space` |
-| Preview a sound | Hover over any cell or instrument, hold `Space` |
-| Select instrument | Hover the instrument in the left sidebar, press `Space` |
-| Play / Stop | Hover the Play button in the top bar, press `Space` |
-| Increase BPM | Hover the `+` BPM button, press `Space` |
-| Decrease BPM | Hover the `−` BPM button, press `Space` |
-| Save pattern | Hover Save, press `Space` (saves to localStorage) |
-| Clear grid | Hover Clear, press `Space` |
+| Toggle note | Click a cell (or hover + Space in spacebar mode) |
+| Preview sound | Hover over an instrument name in the sidebar |
+| Change kit | Use the kit dropdown |
+| BPM | +/− buttons top right |
+| Add pages | The +/− next to the page indicator |
+| Import sounds | "+ Sound" uploads your own file, "+ MyInstants" pulls from the web |
+| Record mic | "+ Mic" |
+| Export | "Export WAV" — exports what you've currently got |
+| Save | "Save" — persists to localStorage so it's there when you come back |
+| Clear | "Clear" — wipes the grid |
 
-Your pattern is saved in `localStorage` and reloaded on next visit.
+---
 
-## Instruments
+## Kits
 
-| Track | Sound |
-|---|---|
-| Kick | `MembraneSynth` — deep bass drum |
-| Snare | `NoiseSynth` — white noise snap |
-| Hi-hat | `MetalSynth` — short metallic tick |
-| Bass | `MonoSynth` — sawtooth bass line |
-| Pluck | `PluckSynth` — Karplus-Strong pluck |
+- **House** — classic four-on-the-floor stuff
+- **Trap** — 808s, fast hi-hats
+- **Synthwave** — big reverby pads
+- **Tuff Phonk** — phonk samples including Low Honor, bark fart, bone crack, etc.
+- **Lo-Fi** — muted, warm sounds
+- **Techno** — industrial kicks and bass
 
-## Tech Stack
+---
 
-- [Vite](https://vitejs.dev/) — build tool
-- [TypeScript](https://www.typescriptlang.org/)
-- [Tone.js](https://tonejs.github.io/) — Web Audio synthesis
-- Plain HTML/CSS (no UI framework)
+## Tech
+
+- [Vite](https://vitejs.dev/) + TypeScript
+- [Tone.js](https://tonejs.github.io/) for all the synthesis and scheduling
+- Vanilla CSS, no UI framework
+- [gh-pages](https://www.npmjs.com/package/gh-pages) for deployment

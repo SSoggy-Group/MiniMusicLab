@@ -63,6 +63,12 @@ export class App {
     this.updateBpmDisplay()
     this.updateFXDisplay()
 
+    for (const inst of this.state.instruments) {
+      if (inst.type === 'sampler' && inst.audioData) {
+        this.engine.loadSample(inst.id, inst.audioData).catch(console.error)
+      }
+    }
+
     const savedMode = localStorage.getItem(MODE_KEY) as InputMode
     if (savedMode === 'click' || savedMode === 'space') {
       this.applyMode(savedMode)
@@ -171,7 +177,7 @@ export class App {
       </div>
 
       <footer class="bottom-panel" id="bottom-panel">
-        <div class="status-text" id="status-text">Hover a cell and press <kbd>Space</kbd> to place a note</div>
+        <div class="status-text" id="status-text">click a cell, or switch to spacebar mode</div>
         <div class="visualizer-wrap" id="visualizer-container"></div>
       </footer>
     `
@@ -293,11 +299,9 @@ export class App {
       this.state.grid.pop()
     }
 
-    if (genre === 'tuff phonk') {
-      for (const r of defaultInsts) {
-        if (r.type === 'sampler' && r.audioData) {
-          await this.engine.loadSample(r.id, r.audioData)
-        }
+    for (const r of nextInsts) {
+      if (r.type === 'sampler' && r.audioData) {
+        await this.engine.loadSample(r.id, r.audioData)
       }
     }
 
@@ -314,7 +318,6 @@ export class App {
     }
   }
 
-  // Stubs to be implemented in subsequent commits
   private renderSidebar() {
     this.sidebar.innerHTML = ''
     this.instrEls = []
@@ -346,7 +349,9 @@ export class App {
       leftWrap.appendChild(name)
       row.appendChild(leftWrap)
 
-      if (inst.type === 'sampler') {
+      const isCustomUserUpload = inst.id.startsWith('custom-') || inst.id.startsWith('instants-') || inst.id.startsWith('mic-')
+
+      if (inst.type === 'sampler' && isCustomUserUpload) {
         const controls = document.createElement('div')
         controls.className = 'sampler-controls'
         controls.style.display = 'flex'

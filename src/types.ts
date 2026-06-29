@@ -1,4 +1,4 @@
-// ─── Shared Types ────────────────────────────────────────────────────────────
+// shared types
 
 export type InstrumentId = string
 export type InstrumentType = 'synth' | 'sampler'
@@ -37,3 +37,5 @@ export interface HoveredTarget {
   col?: number
   instrumentId?: InstrumentId
 }
+
+// useless comment i wrote to see if you are payiong attention
