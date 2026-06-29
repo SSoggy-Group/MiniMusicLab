@@ -154,12 +154,12 @@ export class AudioEngine {
     lead.volume.value = -8
 
     const padChorus = new Tone.Chorus(2, 2.5, 0.5).connect(destination).start()
-    const padFilter = new Tone.AutoFilter(0.1, 800, 3).connect(padChorus).start()
+    const padFilter = new Tone.Filter(2000, "lowpass").connect(padChorus)
     const pad = new Tone.PolySynth(Tone.Synth, {
-      oscillator: { type: 'fatsine', count: 3, spread: 30 },
-      envelope: { attack: 0.2, decay: 0.5, sustain: 1.0, release: 2.0 }
+      oscillator: { type: 'sine', partials: [1, 0.5, 0.25, 0.125] },
+      envelope: { attack: 0.05, decay: 0.1, sustain: 0.8, release: 0.5 }
     }).connect(padFilter)
-    pad.volume.value = -8
+    pad.volume.value = 0
 
     const piano = new Tone.Sampler({
       urls: {
@@ -177,17 +177,16 @@ export class AudioEngine {
     }).connect(destination)
     piano.volume.value = 4
 
-    const stringChorus = new Tone.Chorus(4, 2.5, 0.5).connect(destination).start()
-    const stringFilter = new Tone.Filter(2500, 'lowpass').connect(stringChorus)
-    const violin = new Tone.PolySynth(Tone.FMSynth, {
-      harmonicity: 1.01,
-      modulationIndex: 2,
-      oscillator: { type: 'sawtooth' },
-      envelope: { attack: 0.1, decay: 0.3, sustain: 0.9, release: 1.0 },
-      modulation: { type: 'triangle' },
-      modulationEnvelope: { attack: 0.1, decay: 0.3, sustain: 0.9, release: 1.0 }
+    const stringChorus = new Tone.Chorus(2, 4, 0.5).connect(destination).start()
+    const stringFilter = new Tone.Filter(3000, "lowpass").connect(stringChorus)
+    const violin = new Tone.Sampler({
+      urls: {
+        "C5": "ElevenLabs_Warm_nostalgic_violin,_memories_of_family_gathering.mp3"
+      },
+      release: 1,
+      baseUrl: "/"
     }).connect(stringFilter)
-    violin.volume.value = -8
+    violin.volume.value = 4
 
     return { kick, snare, hihat, clap, crash, tomHigh, tomLow, bass, pluck, lead, pad, piano, violin }
   }
@@ -349,7 +348,14 @@ export class AudioEngine {
     if (samplerObj && samplerObj.buffer.loaded) {
       const inst = this._instruments.find(i => i.id === id)
       const mode = inst?.playbackMode || 'oneshot'
-      const vol = inst?.volume ?? 0.8
+      let vol = inst?.volume ?? 0.8
+      if (inst?.type === 'sampler') {
+        if (id === 'phonk_7') {
+          vol *= 5 // Low honor is extremely quiet
+        } else if (id !== 'phonk_5' && id !== 'phonk_6' && id !== 'pad') {
+          vol *= 2.5 // Boost average samples to compete with Tone.js synths
+        }
+      }
       
       samplerObj.gain.gain.setValueAtTime(vol, t)
 
@@ -435,7 +441,11 @@ export class AudioEngine {
   }
 
   async exportWav(grid: Grid, bpm: number): Promise<Blob> {
-    const totalSteps = grid[0]?.length || 64
+    const baseSteps = grid[0]?.length || 16
+    // If the grid is only 1 or 2 pages, loop it automatically so the exported file is actually a "song"
+    const loopCount = baseSteps <= 32 ? 4 : 1
+    const totalSteps = baseSteps * loopCount
+    
     const totalDuration = ((totalSteps * (60 / bpm)) / 4) + 2 // Added 2 seconds for reverb/cymbal tails
     
     await Tone.loaded()
@@ -466,13 +476,22 @@ export class AudioEngine {
 
       for (let step = 0; step < totalSteps; step++) {
         const time = step * stepDuration
+        const gridStep = step % baseSteps
+        
         instrOrder.forEach((id, row) => {
-          if (grid[row]?.[step]) {
+          if (grid[row]?.[gridStep]) {
             const samplerObj = offlineSamplers[id]
             if (samplerObj && samplerObj.buffer.loaded) {
               const inst = this._instruments.find(i => i.id === id)
               const mode = inst?.playbackMode || 'oneshot'
-              const vol = inst?.volume ?? 0.8
+              let vol = inst?.volume ?? 0.8
+              if (inst?.type === 'sampler') {
+                if (id === 'phonk_7') {
+                  vol *= 5
+                } else if (id !== 'phonk_5' && id !== 'phonk_6' && id !== 'pad') {
+                  vol *= 2.5
+                }
+              }
               
               samplerObj.gain.gain.setValueAtTime(vol, time)
 
