@@ -97,13 +97,13 @@ export class AudioEngine {
     clap.volume.value = 2
 
     const crash = new Tone.MetalSynth({
-      frequency: 250,
       envelope: { attack: 0.001, decay: 2.5, release: 0.5 },
       harmonicity: 5.1,
       modulationIndex: 64,
       resonance: 6000,
       octaves: 1.5,
     }).connect(destination)
+    crash.frequency.value = 250
     crash.volume.value = 0
 
     const tomHigh = new Tone.MembraneSynth({
@@ -151,7 +151,7 @@ export class AudioEngine {
     const padChorus = new Tone.Chorus(2, 2.5, 0.5).connect(destination).start()
     const padFilter = new Tone.Filter(2000, "lowpass").connect(padChorus)
     const pad = new Tone.PolySynth(Tone.Synth, {
-      oscillator: { type: 'sine', partials: [1, 0.5, 0.25, 0.125] },
+      oscillator: { type: 'sine', partials: [1, 0.5, 0.25, 0.125] } as any,
       envelope: { attack: 0.05, decay: 0.1, sustain: 0.8, release: 0.5 }
     }).connect(padFilter)
     pad.volume.value = 0
