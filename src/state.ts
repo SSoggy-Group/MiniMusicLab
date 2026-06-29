@@ -11,9 +11,9 @@ export const DEFAULT_INSTRUMENTS: Instrument[] = [
   { id: 'bass',    label: 'Bass',     color: '#4a69bd', colorHover: '#6a89cc', type: 'synth' },
   { id: 'pluck',   label: 'Pluck',    color: '#22a6b3', colorHover: '#4bb8c2', type: 'synth' },
   { id: 'lead',    label: 'Lead',     color: '#be2edd', colorHover: '#ca58e4', type: 'synth' },
-  { id: 'pad',     label: 'Pad',      color: '#ff7979', colorHover: '#ff9797', type: 'synth' },
+  { id: 'pad',     label: 'Bell',      color: '#ff7979', colorHover: '#ff9797', type: 'sampler', audioData: '/zapsplat_bell_service_disk_ring_slightly_broken_resonate_18042(1).mp3', volume: 1.0, playbackMode: 'oneshot' },
   { id: 'piano',   label: 'Piano',    color: '#a29bfe', colorHover: '#b5b0fc', type: 'synth' },
-  { id: 'violin',  label: 'Strings',  color: '#fd79a8', colorHover: '#fc9abf', type: 'synth' },
+  { id: 'violin',  label: 'Synth Pad',color: '#fd79a8', colorHover: '#fc9abf', type: 'synth' },
 ]
 
 export const PHONK_INSTRUMENTS: Instrument[] = [
