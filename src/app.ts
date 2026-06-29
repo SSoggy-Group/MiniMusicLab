@@ -67,48 +67,8 @@ export class App {
     if (savedMode === 'click' || savedMode === 'space') {
       this.applyMode(savedMode)
     } else {
-      this.showModePicker()
-    }
-  }
-
-  private showModePicker() {
-    const overlay = document.createElement('div')
-    overlay.className = 'mode-picker-overlay'
-    overlay.innerHTML = `
-      <div class="mode-picker-card">
-        <h2 class="mode-picker-title">Select your input method</h2>
-        <p class="mode-picker-sub">Pick how you want to jam today.<br>Once you pick, you're locked in!</p>
-        <div class="mode-picker-options">
-          <button class="mode-btn" id="pick-click">
-            <span class="mode-btn-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-4"/><polyline points="9 12 11 14 15 10"/></svg>
-            </span>
-            <span class="mode-btn-label">Mouse Click</span>
-            <span class="mode-btn-desc">Click anything directly</span>
-          </button>
-          <button class="mode-btn" id="pick-space">
-            <span class="mode-btn-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="8" width="20" height="10" rx="2"/><path d="M7 13h10"/></svg>
-            </span>
-            <span class="mode-btn-label">Space Key</span>
-            <span class="mode-btn-desc">Hover + press Space</span>
-          </button>
-        </div>
-      </div>
-    `
-    document.body.appendChild(overlay)
-
-    overlay.querySelector('#pick-click')?.addEventListener('click', async () => {
-      await Tone.start()
-      overlay.remove()
       this.applyMode('click')
-    })
-
-    overlay.querySelector('#pick-space')?.addEventListener('click', async () => {
-      await Tone.start()
-      overlay.remove()
-      this.applyMode('space')
-    })
+    }
   }
 
   private applyMode(mode: InputMode) {
@@ -151,6 +111,10 @@ export class App {
             <option value="tuff phonk">Tuff Phonk Kit</option>
             <option value="lo-fi">Lo-Fi Kit</option>
             <option value="techno">Techno Kit</option>
+          </select>
+          <select class="genre-select" id="mode-select" aria-label="Input Mode" style="margin-left:8px; width:100px;">
+            <option value="click">Mouse</option>
+            <option value="space">Spacebar</option>
           </select>
           <button class="btn btn-sm" id="reverb-btn" tabindex="-1">Reverb: OFF</button>
           <div class="bpm-control" style="margin-left: 10px;">
@@ -702,10 +666,27 @@ export class App {
       }
     }
 
+    const modeSelect = document.getElementById('mode-select') as HTMLSelectElement
+    if (modeSelect) {
+      modeSelect.value = this.inputMode || 'click'
+      modeSelect.addEventListener('change', (e) => {
+        const val = (e.target as HTMLSelectElement).value as InputMode
+        this.applyMode(val)
+      })
+    }
+
     document.addEventListener('click', startAudio, { capture: true })
 
     document.addEventListener('keydown', (e) => {
       startAudio()
+      if (!(e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement)) {
+        if (e.code === 'Enter') {
+          e.preventDefault()
+          this.togglePlay()
+          return
+        }
+      }
+
       if (
         !(e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement) &&
         this.inputMode === 'space' &&
@@ -720,6 +701,7 @@ export class App {
             const g = genres[nextIdx]
             this.state.genre = g
             this.engine.setGenre(g)
+            this.updateBaseInstruments(g).catch(console.error)
             const selectEl = document.getElementById('genre-select') as HTMLSelectElement
             if (selectEl) {
               selectEl.value = g
@@ -728,7 +710,6 @@ export class App {
             return
           }
           if (this.hovered.type === 'none') {
-            this.togglePlay()
             return
           }
           this.handleKeyActivate()
