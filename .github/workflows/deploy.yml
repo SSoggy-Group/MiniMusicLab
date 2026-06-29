@@ -1,5 +1,5 @@
 name: Deploy to GitHub Pages
-
+# this is the one that works. idk why it didnt work just off branch but whatever it works now so im gonna levae it.
 on:
   push:
     branches: [main]
