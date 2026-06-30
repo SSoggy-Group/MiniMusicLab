@@ -73,7 +73,8 @@ export class App {
     if (savedMode === 'click' || savedMode === 'space') {
       this.applyMode(savedMode)
     } else {
-      this.applyMode('click')
+      const picker = document.getElementById('mode-picker')
+      if (picker) picker.style.display = 'flex'
     }
   }
 
@@ -82,6 +83,10 @@ export class App {
     if (mode) {
       localStorage.setItem(MODE_KEY, mode)
     }
+    const picker = document.getElementById('mode-picker')
+    if (picker) picker.style.display = 'none'
+    const select = document.getElementById('mode-select') as HTMLSelectElement
+    if (select) select.value = mode || 'click'
     this.updateStatus()
   }
 
@@ -172,6 +177,26 @@ export class App {
           </div>
           <div id="instants-results" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:10px;">
             <p class="soundboard-hint">Search for a sound to import to the grid.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="mode-picker-overlay" id="mode-picker" style="display:none;">
+        <div class="mode-picker-card">
+          <div class="mode-picker-icon">👋</div>
+          <h2 class="mode-picker-title">Welcome to MiniMusicLab</h2>
+          <p class="mode-picker-sub">Choose your preferred way to interact with the grid.</p>
+          <div class="mode-picker-options">
+            <button class="mode-btn" id="mode-btn-click">
+              <span class="mode-btn-icon">🖱️</span>
+              <span class="mode-btn-label">Mouse / Touch</span>
+              <span class="mode-btn-desc">Click or tap cells directly</span>
+            </button>
+            <button class="mode-btn" id="mode-btn-space">
+              <span class="mode-btn-icon">⌨️</span>
+              <span class="mode-btn-label">Spacebar</span>
+              <span class="mode-btn-desc">Hover mouse and press Space</span>
+            </button>
           </div>
         </div>
       </div>
@@ -679,6 +704,11 @@ export class App {
         this.applyMode(val)
       })
     }
+
+    const btnClick = document.getElementById('mode-btn-click')
+    const btnSpace = document.getElementById('mode-btn-space')
+    if (btnClick) btnClick.addEventListener('click', () => this.applyMode('click'))
+    if (btnSpace) btnSpace.addEventListener('click', () => this.applyMode('space'))
 
     document.addEventListener('click', startAudio, { capture: true })
 
