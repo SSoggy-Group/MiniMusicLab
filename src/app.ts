@@ -70,12 +70,9 @@ export class App {
     }
 
     const savedMode = localStorage.getItem(MODE_KEY) as InputMode
-    if (savedMode === 'click' || savedMode === 'space') {
-      this.applyMode(savedMode)
-    } else {
-      const picker = document.getElementById('mode-picker')
-      if (picker) picker.style.display = 'flex'
-    }
+    // Always show the mode picker overlay on load, as the user wants it back!
+    const picker = document.getElementById('mode-picker')
+    if (picker) picker.style.display = 'flex'
   }
 
   private applyMode(mode: InputMode) {
