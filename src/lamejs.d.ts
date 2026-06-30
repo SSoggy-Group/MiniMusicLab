@@ -6,3 +6,4 @@ declare namespace lamejs {
   }
 }
 
+// maybe i should switch to ffmpeg.wasm

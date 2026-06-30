@@ -70,7 +70,6 @@ export class App {
     }
 
     const savedMode = localStorage.getItem(MODE_KEY) as InputMode
-    // Always show the mode picker overlay on load, as the user wants it back!
     const picker = document.getElementById('mode-picker')
     if (picker) picker.style.display = 'flex'
   }
@@ -307,8 +306,10 @@ export class App {
     const count = this.state.instruments.length
     const nextInsts = [...defaultInsts]
 
-    if (count > 13) {
-      nextInsts.push(...this.state.instruments.slice(13))
+    const prevBaseCount = this.state.genre === 'tuff phonk' ? PHONK_INSTRUMENTS.length : DEFAULT_INSTRUMENTS.length
+
+    if (count > prevBaseCount) {
+      nextInsts.push(...this.state.instruments.slice(prevBaseCount))
     }
 
     this.state.instruments = nextInsts
@@ -323,7 +324,11 @@ export class App {
 
     for (const r of nextInsts) {
       if (r.type === 'sampler' && r.audioData) {
-        await this.engine.loadSample(r.id, r.audioData)
+        try {
+          await this.engine.loadSample(r.id, r.audioData)
+        } catch (e) {
+          console.error(`Failed to load sample for ${r.id}:`, e)
+        }
       }
     }
 

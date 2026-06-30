@@ -23,11 +23,9 @@ export const PHONK_INSTRUMENTS: Instrument[] = [
   { id: 'phonk_5', label: 'Hardtekk', color: '#f0932b', colorHover: '#f2a856', type: 'sampler', audioData: './phonk/hardtekk(1).mp3', volume: 0.8, playbackMode: 'oneshot' },
   { id: 'phonk_6', label: 'Raw Style', color: '#6ab04c', colorHover: '#87bf6d', type: 'sampler', audioData: './phonk/linia_raw_style.mp3', volume: 0.8, playbackMode: 'oneshot' },
   { id: 'phonk_7', label: 'Low Honor', color: '#badc58', colorHover: '#c8e278', type: 'sampler', audioData: './phonk/low-honor-rdr-2.mp3', volume: 0.8, playbackMode: 'oneshot' },
-  { id: 'phonk_8', label: 'Memphis Synth', color: '#4a69bd', colorHover: '#6a89cc', type: 'sampler', audioData: './phonk/memphis-synth-shot.mp3', volume: 0.8, playbackMode: 'oneshot' },
-  { id: 'phonk_9', label: 'Metamorphosis', color: '#22a6b3', colorHover: '#4bb8c2', type: 'sampler', audioData: './phonk/metamorphosis.mp3', volume: 0.8, playbackMode: 'oneshot' },
-  { id: 'phonk_10', label: 'Murder', color: '#be2edd', colorHover: '#ca58e4', type: 'sampler', audioData: './phonk/murder-in-my-mind.mp3', volume: 0.8, playbackMode: 'oneshot' },
-  { id: 'phonk_11', label: 'Phonk Kick', color: '#ff7979', colorHover: '#ff9797', type: 'sampler', audioData: './phonk/phonk-kick.mp3', volume: 1.0, playbackMode: 'oneshot' },
-  { id: 'phonk_12', label: 'Phonk Snare', color: '#a29bfe', colorHover: '#b5b0fc', type: 'sampler', audioData: './phonk/phonk-snare.mp3', volume: 1.0, playbackMode: 'oneshot' },
+  { id: 'phonk_8', label: 'Meow', color: '#4a69bd', colorHover: '#6a89cc', type: 'sampler', audioData: './phonk/m-e-o-w.mp3', volume: 0.8, playbackMode: 'oneshot' },
+  { id: 'phonk_9', label: 'Meow Burp', color: '#22a6b3', colorHover: '#4bb8c2', type: 'sampler', audioData: './phonk/meow-burp-combo.mp3', volume: 0.8, playbackMode: 'oneshot' },
+  { id: 'phonk_10', label: 'Whistle', color: '#be2edd', colorHover: '#ca58e4', type: 'sampler', audioData: './phonk/som-apito-do-juiz-mp3cut.mp3', volume: 0.8, playbackMode: 'oneshot' },
 ]
 
 export const STORAGE_KEY = 'minimusiclab_v2'
